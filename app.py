@@ -50,7 +50,7 @@ def prepare_data_and_model():
     if not os.path.exists(item_sim_path):
         # ================== PERUBAHAN PENTING DI SINI ==================
         # GANTI DENGAN URL ANDA SENDIRI YANG BARU ANDA SALIN!
-        model_url = "https://github.com/bestoism/MovieRecommenderSystem/releases/download/v1.0.0/item_similarity.csv.zip"
+        model_url = "https://github.com/bestoism/MovieRecommenderSystem/releases/download/v1.0.0/item_similarity.zip"
         zip_path = "saved_model/item_similarity.csv.zip"
 
         with st.spinner(f"Mengunduh file model (ini hanya terjadi sekali)..."):
