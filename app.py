@@ -7,6 +7,8 @@ import requests
 import os
 from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity # <-- Import di atas
+import shutil
+import zipfile # <-- Gunakan library zipfile
 
 # Memuat variabel dari file .env
 load_dotenv()
@@ -34,36 +36,41 @@ def load_data():
     
     return movies_with_ids, item_similarity_df, ratings
 
-@st.cache_resource # Gunakan cache_resource untuk komputasi berat
+@st.cache_resource
 def prepare_data_and_model():
     """
-    Memeriksa file model. Jika tidak ada, jalankan komputasi dan simpan.
+    Memeriksa file model. Jika tidak ada, unduh dari GitHub Releases.
     Setelah itu, panggil load_data() untuk memuat dan mengembalikan dataframes.
     """
     if not os.path.exists('saved_model'):
         os.makedirs('saved_model')
 
     item_sim_path = 'saved_model/item_similarity.csv'
-    movies_clean_path = 'saved_model/movies_cleaned.csv'
-
-    if not os.path.exists(item_sim_path):
-        with st.spinner("Persiapan awal sedang dilakukan... Ini mungkin butuh beberapa menit dan hanya terjadi sekali."):
-            ratings_raw = pd.read_csv('data/ml-latest-small/ratings.csv')
-            movies_raw = pd.read_csv('data/ml-latest-small/movies.csv')
-            
-            movies_raw.to_csv(movies_clean_path, index=False)
-            
-            # Komputasi model
-            user_item_matrix = ratings_raw.pivot_table(index='userId', columns='movieId', values='rating').fillna(0)
-            item_user_matrix = user_item_matrix.T
-            item_similarity = cosine_similarity(item_user_matrix)
-            item_similarity_df = pd.DataFrame(item_similarity,
-                                              index=item_user_matrix.index,
-                                              columns=item_user_matrix.index)
-            item_similarity_df.to_csv(item_sim_path)
-            # st.success("Persiapan selesai! Model telah dibuat dan disimpan secara lokal.") # Bisa di-uncomment jika perlu
     
-    # Setelah memastikan file ada, muat datanya
+    if not os.path.exists(item_sim_path):
+        # ================== PERUBAHAN PENTING DI SINI ==================
+        # GANTI DENGAN URL ANDA SENDIRI YANG BARU ANDA SALIN!
+        model_url = "https://github.com/bestoism/MovieRecommenderSystem/releases/download/v1.0.0/item_similarity.csv.zip"
+        zip_path = "saved_model/item_similarity.csv.zip"
+
+        with st.spinner(f"Mengunduh file model (ini hanya terjadi sekali)..."):
+            with requests.get(model_url, stream=True) as r:
+                r.raise_for_status()
+                with open(zip_path, 'wb') as f:
+                    shutil.copyfileobj(r.raw, f)
+        
+        with st.spinner("Mendekompresi model..."):
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall("saved_model/") # Ekstrak ke folder saved_model
+            os.remove(zip_path) # Hapus file .zip setelah selesai
+        # =============================================================
+
+    # Pastikan file movies_cleaned.csv juga ada
+    movies_clean_path = 'saved_model/movies_cleaned.csv'
+    if not os.path.exists(movies_clean_path):
+        movies_raw = pd.read_csv('data/ml-latest-small/movies.csv')
+        movies_raw.to_csv(movies_clean_path, index=False)
+            
     return load_data()
 
 # ... (Fungsi-fungsi helper lainnya tetap sama) ...
