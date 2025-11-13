@@ -185,29 +185,61 @@ if 'selected_movie' not in st.session_state: st.session_state.selected_movie = N
 # (Semua fungsi display_... TIDAK BERUBAH, tapi sekarang mereka akan menggunakan dataframes global yang sudah benar)
 
 def display_home_page():
+    # Bagian Judul (bisa dibuat lebih menonjol)
     st.title("🎬 Movie Recommender")
     st.write("Temukan film favoritmu berikutnya! Pilih berdasarkan film yang kamu suka atau genre favoritmu.")
-    col1, col2, col3 = st.columns([3, 3, 1])
-    with col1: selected_movie = st.selectbox("Ketik atau pilih film yang kamu suka:", movie_list)
-    with col2: selected_genre = st.selectbox("Atau pilih genre favoritmu:", genre_list)
-    with col3:
-        st.write(""); st.write("")
-        if st.button("🎲 Acak!", help="Tampilkan film acak"):
+    
+    # Beri sedikit ruang vertikal
+    st.write("")
+
+    # --- Pola Desain Baru ---
+    col1, col2 = st.columns(2, gap="large") # Buat 2 kolom dengan jarak
+
+    with col1:
+        selected_movie = st.selectbox(
+            "Ketik atau pilih film yang kamu suka:", 
+            movie_list,
+            label_visibility="collapsed", # Sembunyikan label karena sudah ada di atas
+            placeholder="Ketik atau pilih film..."
+        )
+
+    with col2:
+        selected_genre = st.selectbox(
+            "Atau pilih genre favoritmu:", 
+            genre_list,
+            label_visibility="collapsed",
+            placeholder="Pilih genre..."
+        )
+
+    st.write("") # Spasi lagi
+
+    # --- Pengelompokan Tombol Aksi ---
+    # Buat 3 kolom untuk menempatkan tombol
+    # Angka [2, 3, 2] adalah rasio, untuk membuat kolom tengah lebih lebar
+    b_col1, b_col2, b_col3 = st.columns([2, 3, 2])
+
+    with b_col2: # Tempatkan tombol di kolom tengah agar terpusat
+        if st.button("Tampilkan Rekomendasi", type="primary", use_container_width=True):
+            with st.spinner('Mencari rekomendasi untukmu...'):
+                if selected_movie: 
+                    st.session_state.recommendations = get_item_recommendations(selected_movie, item_similarity_df, movies_df)
+                elif selected_genre: 
+                    st.session_state.recommendations = get_genre_recommendations(selected_genre, movies_df, ratings_df)
+                else:
+                    st.warning("Silakan pilih film atau genre terlebih dahulu.")
+                    return # Hentikan eksekusi jika tidak ada yang dipilih
+
+                if not st.session_state.recommendations.empty:
+                    st.session_state.page = 'recommendations'
+                    st.rerun()
+                else: 
+                    st.error("Maaf, tidak dapat menemukan rekomendasi. Coba film atau genre lain.")
+        
+        if st.button("🎲 Tampilkan Film Acak", use_container_width=True):
             with st.spinner('Mencari film seru...'):
                 st.session_state.recommendations = get_random_recommendations(movies_df)
                 st.session_state.page = 'recommendations'
                 st.rerun()
-    if st.button("Tampilkan Rekomendasi", type="primary"):
-        with st.spinner('Mencari rekomendasi untukmu...'):
-            if selected_movie: st.session_state.recommendations = get_item_recommendations(selected_movie, item_similarity_df, movies_df)
-            elif selected_genre: st.session_state.recommendations = get_genre_recommendations(selected_genre, movies_df, ratings_df)
-            else:
-                st.warning("Silakan pilih film atau genre terlebih dahulu.")
-                return
-            if not st.session_state.recommendations.empty:
-                st.session_state.page = 'recommendations'
-                st.rerun()
-            else: st.error("Maaf, tidak dapat menemukan rekomendasi. Coba film atau genre lain.")
 
 def display_recommendations_page():
     st.title("Berikut Rekomendasi Untukmu")
