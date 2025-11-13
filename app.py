@@ -74,6 +74,17 @@ def load_data():
     
     return movies_with_ids, item_similarity_df, ratings
 
+@st.cache_data
+def get_banner_movies(movies_df, ratings_df, n=20):
+    """Mengambil n film paling populer untuk ditampilkan di banner."""
+    movie_ratings = pd.merge(movies_df, ratings_df, on='movieId')
+    popularity = movie_ratings.groupby('title')['rating'].count().sort_values(ascending=False)
+    top_popular_titles = popularity.head(n).index
+    
+    # Ambil detail lengkap dari film-film populer tersebut
+    banner_movies = movies_df[movies_df['title'].isin(top_popular_titles)]
+    return banner_movies
+
 @st.cache_resource
 def prepare_data_and_model():
     """
@@ -168,6 +179,9 @@ def fetch_movie_details(tmdb_id):
 # Panggil fungsi persiapan SATU KALI untuk mendapatkan semua data
 movies_df, item_similarity_df, ratings_df = prepare_data_and_model()
 
+# --- TAMBAHKAN INI: Dapatkan daftar film untuk banner ---
+banner_movies = get_banner_movies(movies_df, ratings_df, n=20)
+
 # Siapkan list untuk UI
 movie_list = [""] + sorted(movies_df['title'].unique().tolist())
 genre_list = sorted(list(set('|'.join(movies_df['genres']).split('|'))))
@@ -184,7 +198,75 @@ if 'selected_movie' not in st.session_state: st.session_state.selected_movie = N
 # --- 3. LOGIKA TAMPILAN (UI PAGES) ---
 # (Semua fungsi display_... TIDAK BERUBAH, tapi sekarang mereka akan menggunakan dataframes global yang sudah benar)
 
+def display_scrolling_banner(banner_movies):
+    """Menampilkan banner poster film yang bergerak menggunakan HTML dan CSS."""
+    
+    # Ambil URL poster untuk setiap film
+    poster_urls = [fetch_movie_details(row['tmdbId'])[0] for _, row in banner_movies.iterrows()]
+    
+    # Trik untuk membuat loop tak terbatas: duplikasi daftar poster
+    posters_html = "".join([f'<div class="marquee-item"><img src="{url}" alt="movie poster"></div>' for url in poster_urls])
+    duplicated_posters_html = posters_html + posters_html
+
+    # Gabungkan HTML dan CSS
+    banner_html = f"""
+    <style>
+        @keyframes scroll {{
+            0% {{ transform: translateX(0); }}
+            100% {{ transform: translateX(-50%); }} /* Bergerak sejauh setengah dari total lebar (karena duplikasi) */
+        }}
+
+        .marquee-container {{
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            padding: 20px 0;
+            background: #1a1a1a; /* Warna latar belakang gelap agar lebih sinematik */
+            border-radius: 10px;
+        }}
+
+        .marquee-content {{
+            display: flex;
+            width: 200%; /* Lebar total adalah dua kali lipat karena duplikasi */
+            animation: scroll 60s linear infinite; /* Durasi animasi, sesuaikan jika perlu */
+        }}
+        
+        .marquee-container:hover .marquee-content {{
+            animation-play-state: paused; /* Jeda animasi saat mouse di atasnya */
+        }}
+
+        .marquee-item {{
+            flex-shrink: 0;
+            width: 160px; /* Lebar setiap poster */
+            margin: 0 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }}
+
+        .marquee-item:hover {{
+            transform: scale(1.05); /* Sedikit membesar saat mouse di atas poster */
+        }}
+
+        .marquee-item img {{
+            width: 100%;
+            height: auto;
+            display: block;
+        }}
+    </style>
+
+    <div class="marquee-container">
+        <div class="marquee-content">
+            {duplicated_posters_html}
+        </div>
+    </div>
+    """
+    
+    st.markdown(banner_html, unsafe_allow_html=True)
+    
 def display_home_page():
+    display_scrolling_banner(banner_movies)
     # 1. Judul dan Subjudul yang sudah di tengah
     st.markdown("<h1 style='text-align: center;'>🎬 Movie Recommender</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Temukan film favoritmu berikutnya! Pilih berdasarkan film yang kamu suka atau genre favoritmu.</p>", unsafe_allow_html=True)
