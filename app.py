@@ -19,6 +19,19 @@ if not API_KEY:
     st.error("API Key TMDb tidak ditemukan. Mohon buat file .env dan tambahkan TMDB_API_KEY.")
     st.stop()
 
+def add_custom_css():
+    st.markdown("""
+        <style>
+            /* Menargetkan kontainer gambar di dalam kolom Streamlit */
+            .st-emotion-cache-1v0mbdj > img {
+                object-fit: cover;  /* Memaksa gambar untuk menutupi area, memotong jika perlu */
+                aspect-ratio: 2/3;  /* Menetapkan aspek rasio poster film standar */
+                height: 100%;       /* Pastikan tinggi mengikuti kontainer */
+                width: 100%;        /* Pastikan lebar mengikuti kontainer */
+            }
+        </style>
+        """, unsafe_allow_html=True)
+    
 # --- 1. FUNGSI-FUNGSI UTAMA ---
 
 # DEFINISIKAN load_data() TERLEBIH DAHULU
@@ -211,6 +224,7 @@ def display_movie_details_page():
                 st.rerun()
 
 # --- 4. ROUTER UTAMA ---
+add_custom_css() 
 if st.session_state.page == 'home': display_home_page()
 elif st.session_state.page == 'recommendations': display_recommendations_page()
 elif st.session_state.page == 'details': display_movie_details_page()
