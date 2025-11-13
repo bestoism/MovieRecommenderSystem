@@ -64,7 +64,7 @@ def prepare_data_and_model():
         # ================== PERUBAHAN PENTING DI SINI ==================
         # GANTI DENGAN URL ANDA SENDIRI YANG BARU ANDA SALIN!
         model_url = "https://github.com/bestoism/MovieRecommenderSystem/releases/download/v1.0.0/item_similarity.zip"
-        zip_path = "saved_model/item_similarity.csv.zip"
+        zip_path = "saved_model/item_similarity.zip"
 
         with st.spinner(f"Mengunduh file model (ini hanya terjadi sekali)..."):
             with requests.get(model_url, stream=True) as r:
@@ -145,7 +145,11 @@ movies_df, item_similarity_df, ratings_df = prepare_data_and_model()
 
 # Siapkan list untuk UI
 movie_list = [""] + sorted(movies_df['title'].unique().tolist())
-genre_list = [""] + sorted(list(set('|'.join(movies_df['genres']).split('|'))))
+genre_list = sorted(list(set('|'.join(movies_df['genres']).split('|'))))
+# Hapus entri yang tidak diinginkan
+genre_list = [genre for genre in genre_list if genre and genre != '(no genres listed)']
+genre_list.insert(0, "") # Tambahkan opsi kosong di awal
+
 
 # Inisialisasi session state
 if 'page' not in st.session_state: st.session_state.page = 'home'
@@ -189,6 +193,10 @@ def display_recommendations_page():
     recs = st.session_state.recommendations
     num_cols = 5
     cols = st.columns(num_cols)
+    
+    if recs is None or recs.empty:
+        st.warning("Tidak ada rekomendasi untuk ditampilkan. Silakan kembali dan coba lagi.")
+        st.stop()
 
     for i, row in recs.reset_index(drop=True).iterrows():
         with cols[i % num_cols]:
