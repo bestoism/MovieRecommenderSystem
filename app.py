@@ -54,6 +54,13 @@ def add_custom_css():
                 height: auto;
                 width: 100%;
             }
+            
+            div[data-baseweb="select"] > div > div:first-child {
+                /* Menargetkan teks placeholder */
+                color: #A0A0A0 !important; /* Warna abu-abu terang */
+                font-style: italic !important; /* Membuatnya miring */
+            }
+            
         </style>
         """, unsafe_allow_html=True)
     
@@ -201,44 +208,37 @@ if 'selected_movie' not in st.session_state: st.session_state.selected_movie = N
 def display_scrolling_banner(banner_movies):
     """Menampilkan banner poster film yang bergerak menggunakan HTML dan CSS."""
     
-    # Ambil URL poster untuk setiap film
     poster_urls = [fetch_movie_details(row['tmdbId'])[0] for _, row in banner_movies.iterrows()]
-    
-    # Trik untuk membuat loop tak terbatas: duplikasi daftar poster
     posters_html = "".join([f'<div class="marquee-item"><img src="{url}" alt="movie poster"></div>' for url in poster_urls])
     duplicated_posters_html = posters_html + posters_html
 
-    # Gabungkan HTML dan CSS
     banner_html = f"""
     <style>
+        /* ... CSS @keyframes dan .marquee-container tetap sama ... */
         @keyframes scroll {{
             0% {{ transform: translateX(0); }}
-            100% {{ transform: translateX(-50%); }} /* Bergerak sejauh setengah dari total lebar (karena duplikasi) */
+            100% {{ transform: translateX(-50%); }}
         }}
-
         .marquee-container {{
             width: 100%;
             overflow: hidden;
             position: relative;
             padding: 20px 0;
-            background: #1a1a1a; /* Warna latar belakang gelap agar lebih sinematik */
-            border-radius: 10px;
         }}
-
         .marquee-content {{
             display: flex;
-            width: 200%; /* Lebar total adalah dua kali lipat karena duplikasi */
-            animation: scroll 60s linear infinite; /* Durasi animasi, sesuaikan jika perlu */
+            width: 200%;
+            animation: scroll 80s linear infinite; /* Durasi sedikit lebih lama agar tidak terlalu cepat */
         }}
-        
         .marquee-container:hover .marquee-content {{
-            animation-play-state: paused; /* Jeda animasi saat mouse di atasnya */
+            animation-play-state: paused;
         }}
 
+        /* --- PERUBAHAN DI SINI --- */
         .marquee-item {{
             flex-shrink: 0;
-            width: 160px; /* Lebar setiap poster */
-            margin: 0 10px;
+            width: 220px; /* PERBESAR DARI 160px */
+            margin: 0 15px; /* Tambah jarak agar tidak terlalu rapat */
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
@@ -246,9 +246,8 @@ def display_scrolling_banner(banner_movies):
         }}
 
         .marquee-item:hover {{
-            transform: scale(1.05); /* Sedikit membesar saat mouse di atas poster */
+            transform: scale(1.05);
         }}
-
         .marquee-item img {{
             width: 100%;
             height: auto;
@@ -262,38 +261,31 @@ def display_scrolling_banner(banner_movies):
         </div>
     </div>
     """
-    
     st.markdown(banner_html, unsafe_allow_html=True)
     
 def display_home_page():
-    display_scrolling_banner(banner_movies)
-    # 1. Judul dan Subjudul yang sudah di tengah
+    # 1. Judul dan input tetap berada di atas
     st.markdown("<h1 style='text-align: center;'>🎬 Movie Recommender</h1>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>Temukan film favoritmu berikutnya! Pilih berdasarkan film yang kamu suka atau genre favoritmu.</p>", unsafe_allow_html=True)
-    
-    # Beri sedikit ruang vertikal
     st.write("")
 
-    # 2. Kolom untuk input dengan placeholder
     col1, col2 = st.columns(2, gap="large")
     with col1:
         selected_movie = st.selectbox(
             "Pilih Film", 
             movie_list,
-            placeholder="Ketik atau pilih film...", # <-- Placeholder
+            placeholder="Ketik atau pilih film...",
             label_visibility="collapsed"
         )
     with col2:
         selected_genre = st.selectbox(
             "Pilih Genre", 
             genre_list,
-            placeholder="Atau pilih genre favoritmu...", # <-- Placeholder
+            placeholder="Atau pilih genre favoritmu...",
             label_visibility="collapsed"
         )
-    
-    st.write("") # Spasi lagi
+    st.write("")
 
-    # 3. Kolom untuk tombol-tombol agar terpusat
     b_col1, b_col2, b_col3 = st.columns([2, 3, 2])
     with b_col2:
         if st.button("Tampilkan Rekomendasi", type="primary", use_container_width=True):
@@ -319,6 +311,14 @@ def display_home_page():
                 st.session_state.recommendations = get_random_recommendations(movies_df)
                 st.session_state.page = 'recommendations'
                 st.rerun()
+
+    # --- PERUBAHAN DIMULAI DI SINI ---
+    st.write("")
+    st.divider() # Tambahkan garis pemisah yang rapi
+    st.markdown("<h3 style='text-align: center; color: #FAFAFA;'>Film Terpopuler Saat Ini</h3>", unsafe_allow_html=True)
+    
+    # 2. Panggil banner di bagian paling bawah halaman
+    display_scrolling_banner(banner_movies)
 
 def display_recommendations_page():
     st.title("Berikut Rekomendasi Untukmu")
