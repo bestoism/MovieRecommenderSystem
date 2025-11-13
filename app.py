@@ -96,8 +96,17 @@ def get_random_recommendations(movies_df, n=10):
 
 @st.cache_data
 def fetch_movie_details(tmdb_id):
+    """Mengambil poster dan sinopsis dari TMDb API."""
+    
+    # URL yang akan kita panggil
+    url = f"https://api.themoviedb.org/3/movie/{tmdb_id}?api_key={API_KEY}&language=en-US"
+    
+    # ================== KODE DEBUGGING SEMENTARA ==================
+    # Baris ini akan menampilkan notifikasi toast dengan URL yang sedang diakses.
+    st.toast(f"Mencoba mengambil data dari: {url}")
+    # =============================================================
+
     try:
-        url = f"https://api.themoviedb.org/3/movie/{tmdb_id}?api_key={API_KEY}&language=en-US"
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
@@ -105,7 +114,9 @@ def fetch_movie_details(tmdb_id):
         full_poster_path = f"https://image.tmdb.org/t/p/w500/{poster_path}" if poster_path else "https://via.placeholder.com/500x750.png?text=No+Poster"
         overview = data.get('overview', 'No synopsis available.')
         return full_poster_path, overview
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
+        # Kita tambahkan logging error di sini untuk melihat lebih detail di log Streamlit
+        st.error(f"Gagal mengambil data untuk tmdb_id {tmdb_id}: {e}")
         return "https://via.placeholder.com/500x750.png?text=Error", "Could not fetch details."
 
 # --- 2. INISIALISASI APLIKASI ---
