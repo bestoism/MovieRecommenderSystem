@@ -10,6 +10,8 @@ from sklearn.metrics.pairwise import cosine_similarity # <-- Import di atas
 import shutil
 import zipfile # <-- Gunakan library zipfile
 
+st.set_page_config(layout="wide")
+
 # Memuat variabel dari file .env
 load_dotenv()
 API_KEY = os.getenv("TMDB_API_KEY")
@@ -22,12 +24,35 @@ if not API_KEY:
 def add_custom_css():
     st.markdown("""
         <style>
-            /* Menargetkan kontainer gambar di dalam kolom Streamlit */
-            .st-emotion-cache-1v0mbdj > img {
-                object-fit: cover;  /* Memaksa gambar untuk menutupi area, memotong jika perlu */
-                aspect-ratio: 2/3;  /* Menetapkan aspek rasio poster film standar */
-                height: 100%;       /* Pastikan tinggi mengikuti kontainer */
-                width: 100%;        /* Pastikan lebar mengikuti kontainer */
+            /* Mengatur agar kolom-kolom meregang secara vertikal untuk mengisi ruang */
+            div[data-testid="stHorizontalBlock"] > div[data-testid="stVerticalBlock"] {
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* Ini adalah selector untuk container yang Anda buat dengan border=True */
+            /* Kita membuatnya menjadi flex container yang meregang */
+            div[data-testid="stVerticalBlock"] > div[style*="border"] {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between; /* Memberi ruang antara konten dan tombol */
+                height: 100%; /* SANGAT PENTING: Memaksa kartu untuk meregang setinggi kartu tertinggi di barisnya */
+            }
+
+            /* Mendorong tombol ke bagian bawah kartu */
+            div[data-testid="stVerticalBlock"] > div[style*="border"] > div[data-testid="stVerticalBlock"] {
+                 flex-grow: 1; /* Biarkan blok konten (poster, judul) tumbuh */
+            }
+            div[data-testid="stVerticalBlock"] > div[style*="border"] > div[data-testid="stVerticalBlock"] > div[data-testid="stButton"] {
+                margin-top: auto; /* AJAIB: Mendorong tombol ke bawah */
+            }
+
+            /* CSS untuk gambar poster tetap sama */
+            .st-emotion-cache-1v0mbdj > img, .st-emotion-cache-ch2vfg > img {
+                object-fit: cover;
+                aspect-ratio: 2/3;
+                height: auto;
+                width: 100%;
             }
         </style>
         """, unsafe_allow_html=True)
