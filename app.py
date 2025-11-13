@@ -185,41 +185,37 @@ if 'selected_movie' not in st.session_state: st.session_state.selected_movie = N
 # (Semua fungsi display_... TIDAK BERUBAH, tapi sekarang mereka akan menggunakan dataframes global yang sudah benar)
 
 def display_home_page():
-    # Bagian Judul (bisa dibuat lebih menonjol)
-    st.title("🎬 Movie Recommender")
-    st.write("Temukan film favoritmu berikutnya! Pilih berdasarkan film yang kamu suka atau genre favoritmu.")
+    # 1. Judul dan Subjudul yang sudah di tengah
+    st.markdown("<h1 style='text-align: center;'>🎬 Movie Recommender</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center;'>Temukan film favoritmu berikutnya! Pilih berdasarkan film yang kamu suka atau genre favoritmu.</p>", unsafe_allow_html=True)
     
     # Beri sedikit ruang vertikal
     st.write("")
 
-    # --- Pola Desain Baru ---
-    col1, col2 = st.columns(2, gap="large") # Buat 2 kolom dengan jarak
-
+    # 2. Kolom untuk input dengan placeholder
+    col1, col2 = st.columns(2, gap="large")
     with col1:
         selected_movie = st.selectbox(
-            "Ketik atau pilih film yang kamu suka:", 
+            "Pilih Film", 
             movie_list,
-            label_visibility="collapsed", # Sembunyikan label karena sudah ada di atas
-            placeholder="Ketik atau pilih film..."
+            placeholder="Ketik atau pilih film...", # <-- Placeholder
+            label_visibility="collapsed"
         )
-
     with col2:
         selected_genre = st.selectbox(
-            "Atau pilih genre favoritmu:", 
+            "Pilih Genre", 
             genre_list,
-            label_visibility="collapsed",
-            placeholder="Pilih genre..."
+            placeholder="Atau pilih genre favoritmu...", # <-- Placeholder
+            label_visibility="collapsed"
         )
-
+    
     st.write("") # Spasi lagi
 
-    # --- Pengelompokan Tombol Aksi ---
-    # Buat 3 kolom untuk menempatkan tombol
-    # Angka [2, 3, 2] adalah rasio, untuk membuat kolom tengah lebih lebar
+    # 3. Kolom untuk tombol-tombol agar terpusat
     b_col1, b_col2, b_col3 = st.columns([2, 3, 2])
-
-    with b_col2: # Tempatkan tombol di kolom tengah agar terpusat
+    with b_col2:
         if st.button("Tampilkan Rekomendasi", type="primary", use_container_width=True):
+            # ... Logika tombol utama Anda ...
             with st.spinner('Mencari rekomendasi untukmu...'):
                 if selected_movie: 
                     st.session_state.recommendations = get_item_recommendations(selected_movie, item_similarity_df, movies_df)
@@ -227,7 +223,7 @@ def display_home_page():
                     st.session_state.recommendations = get_genre_recommendations(selected_genre, movies_df, ratings_df)
                 else:
                     st.warning("Silakan pilih film atau genre terlebih dahulu.")
-                    return # Hentikan eksekusi jika tidak ada yang dipilih
+                    return
 
                 if not st.session_state.recommendations.empty:
                     st.session_state.page = 'recommendations'
@@ -236,6 +232,7 @@ def display_home_page():
                     st.error("Maaf, tidak dapat menemukan rekomendasi. Coba film atau genre lain.")
         
         if st.button("🎲 Tampilkan Film Acak", use_container_width=True):
+            # ... Logika tombol acak Anda ...
             with st.spinner('Mencari film seru...'):
                 st.session_state.recommendations = get_random_recommendations(movies_df)
                 st.session_state.page = 'recommendations'
