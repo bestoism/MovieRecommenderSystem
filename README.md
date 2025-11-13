@@ -101,3 +101,7 @@ MovieRecommenderSystem/
 
 - This application uses the TMDb API but is not endorsed or certified by TMDb.
 - The project is built upon the MovieLens (small) dataset.
+
+---
+
+🚧 This project is under construction — stay tuned for more updates!
