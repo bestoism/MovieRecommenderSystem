@@ -185,19 +185,26 @@ def display_recommendations_page():
     if st.button("⬅️ Kembali ke Halaman Utama"):
         st.session_state.page = 'home'
         st.rerun()
+
     recs = st.session_state.recommendations
     num_cols = 5
     cols = st.columns(num_cols)
-    for i, row in recs.reset_index().iterrows():
+
+    for i, row in recs.reset_index(drop=True).iterrows():
         with cols[i % num_cols]:
-            poster_url, _ = fetch_movie_details(row['tmdbId'])
-            st.image(poster_url, use_container_width=True)
-            st.write(f"**{row['title']}**") 
-            st.caption(f"{row['genres']}")
-            if st.button("Lihat Detail", key=f"detail_{row['movieId']}"):
-                st.session_state.selected_movie = row.to_dict()
-                st.session_state.page = 'details'
-                st.rerun()
+            # Buat container untuk setiap film
+            with st.container(border=True): # Menambahkan border tipis dan padding
+                poster_url, _ = fetch_movie_details(row['tmdbId'])
+                st.image(poster_url) # Tidak perlu use_container_width jika sudah pakai CSS
+
+                # Gunakan st.markdown untuk kontrol lebih
+                st.markdown(f"**{row['title']}**")
+                st.caption(f"{row['genres'].replace('|', ', ')}")
+
+                if st.button("Lihat Detail", key=f"detail_{row['movieId']}", use_container_width=True):
+                    st.session_state.selected_movie = row.to_dict()
+                    st.session_state.page = 'details'
+                    st.rerun()
 
 def display_movie_details_page():
     movie = st.session_state.selected_movie
