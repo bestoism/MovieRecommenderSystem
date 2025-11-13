@@ -75,10 +75,27 @@ def prepare_data_and_model():
 
 # ... (Fungsi-fungsi helper lainnya tetap sama) ...
 def get_item_recommendations(movie_title, item_similarity_df, movies_df, n=10):
-    if movie_title in item_similarity_df.index:
-        sim_scores = item_similarity_df[movie_title].sort_values(ascending=False)
+    """
+    Rekomendasi berdasarkan kesamaan item (film).
+    Versi baru yang menerjemahkan judul film ke movieId terlebih dahulu.
+    """
+    # Langkah 1: Temukan movieId dari judul film
+    movie_row = movies_df[movies_df['title'] == movie_title]
+    if movie_row.empty:
+        return pd.DataFrame() # Kembalikan dataframe kosong jika judul tidak ditemukan
+    
+    target_movie_id = movie_row.iloc[0]['movieId']
+
+    # Langkah 2: Gunakan movieId untuk mencari di matriks kesamaan
+    if target_movie_id in item_similarity_df.index:
+        sim_scores = item_similarity_df[target_movie_id].sort_values(ascending=False)
+        
+        # Ambil movieId dari film-film yang paling mirip
         top_movies_indices = sim_scores.iloc[1:n+1].index
-        return movies_df[movies_df['title'].isin(top_movies_indices)]
+        
+        # Langkah 3: Kembalikan detail film dari movieId yang direkomendasikan
+        return movies_df[movies_df['movieId'].isin(top_movies_indices)]
+        
     return pd.DataFrame()
 
 def get_genre_recommendations(genre, movies_df, ratings_df, n=10):
