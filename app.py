@@ -199,61 +199,57 @@ if 'selected_movie' not in st.session_state: st.session_state.selected_movie = N
 # (Semua fungsi display_... TIDAK BERUBAH, tapi sekarang mereka akan menggunakan dataframes global yang sudah benar)
 
 def display_scrolling_banner(banner_movies):
-    """Menampilkan banner poster film yang bergerak menggunakan HTML dan CSS."""
+    # ...
     
-    # Ambil URL poster untuk setiap film
-    poster_urls = [fetch_movie_details(row['tmdbId'])[0] for _, row in banner_movies.iterrows()]
+    # MODIFIKASI: Sertakan judul di dalam HTML
+    posters_html = ""
+    for _, row in banner_movies.iterrows():
+        url, _ = fetch_movie_details(row['tmdbId'])
+        title = row['title']
+        posters_html += f"""
+            <div class="marquee-item">
+                <img src="{url}" alt="Poster for {title}">
+                <div class="movie-title-overlay">
+                    <div class="movie-title">{title}</div>
+                </div>
+            </div>
+        """
     
-    # Trik untuk membuat loop tak terbatas: duplikasi daftar poster
-    posters_html = "".join([f'<div class="marquee-item"><img src="{url}" alt="movie poster"></div>' for url in poster_urls])
     duplicated_posters_html = posters_html + posters_html
 
-    # Gabungkan HTML dan CSS
+    # MODIFIKASI: Tambahkan CSS untuk overlay dan judul
     banner_html = f"""
     <style>
-        @keyframes scroll {{
-            0% {{ transform: translateX(0); }}
-            100% {{ transform: translateX(-50%); }} /* Bergerak sejauh setengah dari total lebar (karena duplikasi) */
-        }}
-
-        .marquee-container {{
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            padding: 20px 0;
-            background: #1a1a1a; /* Warna latar belakang gelap agar lebih sinematik */
-            border-radius: 10px;
-        }}
-
-        .marquee-content {{
-            display: flex;
-            width: 200%; /* Lebar total adalah dua kali lipat karena duplikasi */
-            animation: scroll 60s linear infinite; /* Durasi animasi, sesuaikan jika perlu */
-        }}
-        
-        .marquee-container:hover .marquee-content {{
-            animation-play-state: paused; /* Jeda animasi saat mouse di atasnya */
-        }}
+        /* ... CSS Anda yang lain tetap sama ... */
 
         .marquee-item {{
-            flex-shrink: 0;
-            width: 160px; /* Lebar setiap poster */
-            margin: 0 10px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s ease;
+            /* ... properti Anda yang lain ... */
+            position: relative; /* Diperlukan untuk memposisikan overlay */
         }}
 
-        .marquee-item:hover {{
-            transform: scale(1.05); /* Sedikit membesar saat mouse di atas poster */
+        .movie-title-overlay {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0)); /* Gradien gelap */
+            color: white;
+            opacity: 0; /* Sembunyikan secara default */
+            transition: opacity 0.3s ease;
+            padding: 20px 10px 10px 10px;
         }}
 
-        .marquee-item img {{
-            width: 100%;
-            height: auto;
-            display: block;
+        .marquee-item:hover .movie-title-overlay {{
+            opacity: 1; /* Tampilkan saat hover */
         }}
+
+        .movie-title {{
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }}
+        
+        /* ... Sisa CSS Anda ... */
     </style>
 
     <div class="marquee-container">
@@ -262,7 +258,6 @@ def display_scrolling_banner(banner_movies):
         </div>
     </div>
     """
-    
     st.markdown(banner_html, unsafe_allow_html=True)
     
 def display_home_page():
